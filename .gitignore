@@ -1,38 +1,17 @@
-# Dependencies
 node_modules/
-**/node_modules/
-
-# Build outputs
+.env
+.env.local
 dist/
 build/
+*.local
 coverage/
-.nyc_output/
-*.tsbuildinfo
-
-# Environment files (keep examples)
-.env
-.env.*
-!.env.example
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
-# OS files
 .DS_Store
-Thumbs.db
-
-# Editor settings
+*.pem
+*.csv
+skyvault-backend.tar
+*.log
 .vscode/
 .idea/
-
-# Runtime files
-*.pid
-*.seed
-*.out
-*.err
+Thumbs.db
+.nyc_output/
 

@@ -1,2 +1,2 @@
-// placeholder — implemented in Phase X
+import '@testing-library/jest-dom';
 
