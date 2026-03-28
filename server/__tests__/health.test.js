@@ -1,9 +1,14 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
 
-jest.mock('mongoose', () => ({
-	connect: jest.fn(),
-}));
+jest.mock('mongoose', () => {
+	const actualMongoose = jest.requireActual('mongoose');
+
+	return {
+		...actualMongoose,
+		connect: jest.fn(),
+	};
+});
 
 process.env.MONGODB_URI = 'mongodb://localhost:27017/skyvault-test';
 

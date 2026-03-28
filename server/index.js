@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 
@@ -26,6 +27,8 @@ app.get('/api/health', (req, res) => {
 		version: '1.0.0',
 	});
 });
+
+app.use('/api/auth', authRoutes);
 
 const port = process.env.PORT || 5000;
 
