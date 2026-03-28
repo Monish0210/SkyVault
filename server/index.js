@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
 const fileRoutes = require('./routes/files');
+const userRoutes = require('./routes/users');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/users', userRoutes);
 
 const port = process.env.PORT || 5000;
 
