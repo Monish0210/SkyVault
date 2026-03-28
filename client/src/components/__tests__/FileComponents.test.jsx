@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const uploadMutateAsyncMock = vi.hoisted(() => vi.fn())
 const softDeleteMutateAsyncMock = vi.hoisted(() => vi.fn())
@@ -32,6 +33,15 @@ vi.mock('sonner', () => ({
 import DropZone from '../DropZone.jsx'
 import FileList from '../FileList.jsx'
 
+function renderWithQueryClient(ui) {
+	const queryClient = new QueryClient()
+	return render(
+		<QueryClientProvider client={queryClient}>
+			{ui}
+		</QueryClientProvider>
+	)
+}
+
 describe('DropZone', () => {
 	beforeEach(() => {
 		uploadMutateAsyncMock.mockReset()
@@ -39,14 +49,14 @@ describe('DropZone', () => {
 	})
 
 	it('renders idle dropzone message', () => {
-		render(<DropZone />)
+		renderWithQueryClient(<DropZone />)
 
 		expect(screen.getByText('Drop files here or click to browse')).toBeInTheDocument()
 	})
 
 	it('uploads selected files through mutation', async () => {
 		const user = userEvent.setup()
-		render(<DropZone />)
+		renderWithQueryClient(<DropZone />)
 
 		const fileInput = document.querySelector('input[type="file"]')
 		const file = new File(['hello'], 'hello.txt', { type: 'text/plain' })
@@ -76,13 +86,13 @@ describe('FileList', () => {
 	})
 
 	it('renders loading skeleton state', () => {
-		render(<FileList files={[]} mode="files" isLoading />)
+		renderWithQueryClient(<FileList files={[]} mode="files" isLoading />)
 
 		expect(screen.getByLabelText('files-loading')).toBeInTheDocument()
 	})
 
 	it('renders empty state', () => {
-		render(<FileList files={[]} mode="files" isLoading={false} />)
+		renderWithQueryClient(<FileList files={[]} mode="files" isLoading={false} />)
 
 		expect(screen.getByText('No files here')).toBeInTheDocument()
 	})
@@ -99,7 +109,7 @@ describe('FileList', () => {
 			},
 		]
 
-		render(<FileList files={files} mode="files" isLoading={false} />)
+		renderWithQueryClient(<FileList files={files} mode="files" isLoading={false} />)
 
 		await user.click(screen.getByRole('button', { name: /download/i }))
 		await waitFor(() => {
@@ -125,7 +135,7 @@ describe('FileList', () => {
 			},
 		]
 
-		render(<FileList files={files} mode="trash" isLoading={false} />)
+		renderWithQueryClient(<FileList files={files} mode="trash" isLoading={false} />)
 
 		await user.click(screen.getByRole('button', { name: /restore/i }))
 		await waitFor(() => {

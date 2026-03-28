@@ -5,7 +5,7 @@ const authMiddleware = require('../middleware/auth');
 const storageQuotaMiddleware = require('../middleware/storageQuota');
 const File = require('../models/File');
 const User = require('../models/User');
-const { uploadToS3, deleteFromS3, getPresignedUrl } = require('../services/s3Service');
+const { uploadToS3, deleteFromS3, getPresignedUrl, copyVersionToS3 } = require('../services/s3Service');
 
 const router = express.Router();
 const upload = multer({
@@ -26,6 +26,23 @@ router.post('/upload', authMiddleware, storageQuotaMiddleware, upload.single('fi
 		}
 
 		const userId = req.user.userId;
+		const { parentFileId } = req.query;
+		let resolvedParentFileId = null;
+
+		if (parentFileId) {
+			const parentFile = await File.findOne({
+				_id: parentFileId,
+				userId,
+			});
+
+			if (!parentFile) {
+				res.status(404).json({ error: 'Parent file not found' });
+				return;
+			}
+
+			resolvedParentFileId = parentFile._id;
+		}
+
 		const s3Key = `uploads/${userId}/${uuidv4()}-${req.file.originalname}`;
 		const versionId = await uploadToS3(req.file.buffer, req.file.mimetype, s3Key);
 
@@ -36,7 +53,7 @@ router.post('/upload', authMiddleware, storageQuotaMiddleware, upload.single('fi
 			s3VersionId: versionId,
 			mimeType: req.file.mimetype,
 			size: req.file.size,
-			parentFileId: null,
+			parentFileId: resolvedParentFileId,
 		});
 
 		await User.findByIdAndUpdate(userId, { $inc: { storageUsed: req.file.size } });
@@ -48,6 +65,80 @@ router.post('/upload', authMiddleware, storageQuotaMiddleware, upload.single('fi
 			return;
 		}
 
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+router.get('/:id/versions', authMiddleware, async (req, res) => {
+	try {
+		const sourceFile = await File.findOne({
+			_id: req.params.id,
+			userId: req.user.userId,
+			isDeleted: false,
+		});
+
+		if (!sourceFile) {
+			res.status(404).json({ error: 'File not found' });
+			return;
+		}
+
+		const versions = await File.find({
+			userId: req.user.userId,
+			originalName: sourceFile.originalName,
+			isDeleted: false,
+		}).sort({ createdAt: 1 });
+
+		const newestVersionId = versions.length ? versions[versions.length - 1]._id.toString() : null;
+		const payload = versions.map((version) => ({
+			...version.toObject(),
+			isCurrent: version._id.toString() === newestVersionId,
+		}));
+
+		res.status(200).json(payload);
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+router.post('/:id/restore-version', authMiddleware, storageQuotaMiddleware, async (req, res) => {
+	try {
+		const { targetS3VersionId } = req.body;
+
+		if (!targetS3VersionId) {
+			res.status(400).json({ error: 'targetS3VersionId is required' });
+			return;
+		}
+
+		const originalFile = await File.findOne({
+			_id: req.params.id,
+			userId: req.user.userId,
+			isDeleted: false,
+		});
+
+		if (!originalFile) {
+			res.status(404).json({ error: 'File not found' });
+			return;
+		}
+
+		const restoredS3Key = `uploads/${req.user.userId}/${uuidv4()}-restored-${originalFile.originalName}`;
+		const newVersionId = await copyVersionToS3(originalFile.s3Key, targetS3VersionId, restoredS3Key);
+
+		const restoredFile = await File.create({
+			userId: req.user.userId,
+			originalName: originalFile.originalName,
+			s3Key: restoredS3Key,
+			s3VersionId: newVersionId,
+			mimeType: originalFile.mimeType,
+			size: originalFile.size,
+			parentFileId: originalFile._id,
+			isDeleted: false,
+			deletedAt: null,
+		});
+
+		await User.findByIdAndUpdate(req.user.userId, { $inc: { storageUsed: originalFile.size } });
+
+		res.status(201).json(restoredFile);
+	} catch (error) {
 		res.status(500).json({ error: 'Internal server error' });
 	}
 });

@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, CopyObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 
 const s3Client = new S3Client({
@@ -58,9 +58,29 @@ async function getPresignedUrl(s3Key, expirySeconds) {
 	return getSignedUrl(s3Client, command, { expiresIn: expirySeconds });
 }
 
+/**
+ * Restores a previous S3 object version by copying it to a new key.
+ * @param {string} sourceKey
+ * @param {string} targetS3VersionId
+ * @param {string} destinationKey
+ * @returns {Promise<string | null>}
+ */
+async function copyVersionToS3(sourceKey, targetS3VersionId, destinationKey) {
+	const copySource = `${process.env.S3_BUCKET_NAME}/${sourceKey}?versionId=${targetS3VersionId}`;
+	const command = new CopyObjectCommand({
+		Bucket: process.env.S3_BUCKET_NAME,
+		Key: destinationKey,
+		CopySource: copySource,
+	});
+
+	const result = await s3Client.send(command);
+	return result.VersionId ?? null;
+}
+
 module.exports = {
 	uploadToS3,
 	deleteFromS3,
 	getPresignedUrl,
+	copyVersionToS3,
 };
 

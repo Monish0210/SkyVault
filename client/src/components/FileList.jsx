@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import api from '../lib/axios.js'
 import { usePermanentDelete, useRestore, useSoftDelete } from '../hooks/useFiles.js'
 import { formatBytes, formatDate, getMimeIcon } from '../utils/formatters.js'
+import VersionHistory from './VersionHistory.jsx'
 import { Button } from './ui/button.jsx'
 import {
 	Table,
@@ -118,6 +119,7 @@ function FileList({ files = [], mode = 'files', isLoading = false }) {
 								<TableCell className="text-right">
 									{mode === 'files' ? (
 										<div className="flex justify-end gap-2">
+											<VersionHistory fileId={file._id} />
 											<Button variant="outline" size="sm" onClick={() => onDownload(file)}>
 												<Download className="mr-1 size-4" />
 												Download
