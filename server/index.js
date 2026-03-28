@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const authRoutes = require('./routes/auth');
+const fileRoutes = require('./routes/files');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/files', fileRoutes);
 
 const port = process.env.PORT || 5000;
 
