@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const authMiddleware = require('../middleware/auth');
 const storageQuotaMiddleware = require('../middleware/storageQuota');
 const File = require('../models/File');
+const Share = require('../models/Share');
 const User = require('../models/User');
 const { uploadToS3, deleteFromS3, getPresignedUrl, copyVersionToS3 } = require('../services/s3Service');
 
@@ -138,6 +139,61 @@ router.post('/:id/restore-version', authMiddleware, storageQuotaMiddleware, asyn
 		await User.findByIdAndUpdate(req.user.userId, { $inc: { storageUsed: originalFile.size } });
 
 		res.status(201).json(restoredFile);
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+router.post('/:id/share', authMiddleware, async (req, res) => {
+	try {
+		const file = await File.findOne({
+			_id: req.params.id,
+			userId: req.user.userId,
+		});
+
+		if (!file) {
+			res.status(404).json({ error: 'File not found' });
+			return;
+		}
+
+		const expiresInSeconds = 3600;
+		const shareUrl = await getPresignedUrl(file.s3Key, expiresInSeconds);
+		const expiresAt = new Date(Date.now() + 3600000);
+
+		await Share.create({
+			fileId: file._id,
+			createdBy: req.user.userId,
+			presignedUrl: shareUrl,
+			expiresAt,
+		});
+
+		res.status(201).json({
+			shareUrl,
+			expiresAt,
+		});
+	} catch (error) {
+		res.status(500).json({ error: 'Internal server error' });
+	}
+});
+
+router.get('/:id/shares', authMiddleware, async (req, res) => {
+	try {
+		const file = await File.findOne({
+			_id: req.params.id,
+			userId: req.user.userId,
+		});
+
+		if (!file) {
+			res.status(404).json({ error: 'File not found' });
+			return;
+		}
+
+		const shares = await Share.find({
+			fileId: file._id,
+			expiresAt: { $gt: new Date() },
+		}).sort({ createdAt: -1 });
+
+		res.status(200).json(shares);
 	} catch (error) {
 		res.status(500).json({ error: 'Internal server error' });
 	}
