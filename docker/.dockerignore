@@ -1,2 +1,20 @@
-# Placeholder
+# Exclude dependency directories from build context.
+node_modules
+
+# Exclude local secrets and env files.
+.env
+.env.*
+
+# Exclude test-only sources.
+__tests__
+*.test.js
+*.test.jsx
+coverage
+
+# Exclude VCS metadata and local docs/artifacts.
+.git
+.gitignore
+README.md
+docs
+*.tar
 

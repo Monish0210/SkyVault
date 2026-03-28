@@ -1,2 +1,47 @@
-# placeholder — implemented in Phase X
+# docker-compose is for LOCAL testing only.
+# EC2 deployment uses SCP image transfer and K3s manifests, not docker-compose.
+
+services:
+  # Local MongoDB for containerized development.
+  mongo:
+    image: mongo:8
+    container_name: skyvault-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  # Local backend container.
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: skyvault-backend
+    env_file:
+      - ../server/.env
+    environment:
+      # Override DB target for local container network.
+      MONGODB_URI: mongodb://mongo:27017/skyvault
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+
+  # Local frontend container served by nginx.
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        # Browser should call host-exposed backend API.
+        VITE_API_BASE_URL: http://localhost:5000/api
+    container_name: skyvault-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  # Persistent volume for local Mongo data.
+  mongo-data: {}
 

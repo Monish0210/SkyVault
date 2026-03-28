@@ -1,2 +1,39 @@
-# Placeholder
+# Stage 1: install production dependencies once and reuse in runtime image.
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# Copy only package manifests first for better layer caching.
+COPY server/package*.json ./
+
+# Install production dependencies only.
+RUN npm ci --only=production
+
+# Stage 2: minimal runtime image.
+FROM node:22-alpine AS production
+
+WORKDIR /app
+
+# Copy dependency tree from builder stage.
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy backend source code.
+COPY server/. ./
+
+# Production runtime mode.
+ENV NODE_ENV=production
+
+# Run as non-root user for better container security.
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# API listens on 5000 inside container.
+EXPOSE 5000
+
+# Container health check endpoint.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+	CMD wget -qO- http://localhost:5000/api/health || exit 1
+
+# Start backend process.
+CMD ["node", "index.js"]
 
