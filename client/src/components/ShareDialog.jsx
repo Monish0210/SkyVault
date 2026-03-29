@@ -71,7 +71,7 @@ function ShareDialog({ fileId }) {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline" size="sm" aria-label="Share file">
+				<Button variant="outline" size="sm" className="border-slate-300" aria-label="Share file">
 					<Share2 className="mr-1 size-4" />
 					Share
 				</Button>
@@ -79,11 +79,11 @@ function ShareDialog({ fileId }) {
 
 			<DialogContent className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle>Share File</DialogTitle>
+					<DialogTitle className="text-slate-900">Share File</DialogTitle>
 					<DialogDescription>Generate a secure temporary link for this file.</DialogDescription>
 				</DialogHeader>
 
-				<Alert>
+				<Alert className="border-blue-200 bg-blue-50 text-blue-900">
 					<AlertTitle>Note</AlertTitle>
 					<AlertDescription>Anyone with this link can download the file</AlertDescription>
 				</Alert>
@@ -93,7 +93,7 @@ function ShareDialog({ fileId }) {
 					<p className="text-xs text-slate-600">Expires in 1 hour</p>
 				</div>
 
-				<Button type="button" onClick={onCopyLink} disabled={isLoading || !shareUrl}>
+				<Button type="button" className="bg-blue-600 text-white hover:bg-blue-700" onClick={onCopyLink} disabled={isLoading || !shareUrl}>
 					Copy Link
 				</Button>
 			</DialogContent>

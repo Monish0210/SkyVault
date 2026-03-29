@@ -86,7 +86,7 @@ function FileList({ files = [], mode = 'files', isLoading = false }) {
 
 	if (!files.length) {
 		return (
-			<div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-10 text-center">
+			<div className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-10 text-center shadow-sm">
 				<Inbox className="mb-3 size-10 text-slate-400" aria-hidden="true" />
 				<p className="text-sm font-medium text-slate-700">No files here</p>
 			</div>
@@ -94,10 +94,10 @@ function FileList({ files = [], mode = 'files', isLoading = false }) {
 	}
 
 	return (
-		<div className="rounded-xl border border-slate-200 bg-white p-2">
+		<div className="rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
 			<Table>
 				<TableHeader>
-					<TableRow>
+					<TableRow className="bg-slate-50">
 						<TableHead>Type</TableHead>
 						<TableHead>Name</TableHead>
 						<TableHead>Size</TableHead>
@@ -110,9 +110,9 @@ function FileList({ files = [], mode = 'files', isLoading = false }) {
 						const Icon = getMimeIcon(file.mimeType)
 
 						return (
-							<TableRow key={file._id}>
+							<TableRow key={file._id} className="hover:bg-slate-50/80">
 								<TableCell>
-									<Icon className="size-4 text-slate-500" aria-hidden="true" />
+									<Icon className="size-4 text-blue-600" aria-hidden="true" />
 								</TableCell>
 								<TableCell className="max-w-70 truncate">{file.originalName}</TableCell>
 								<TableCell>{formatBytes(file.size)}</TableCell>
@@ -122,7 +122,7 @@ function FileList({ files = [], mode = 'files', isLoading = false }) {
 										<div className="flex justify-end gap-2">
 											<ShareDialog fileId={file._id} />
 											<VersionHistory fileId={file._id} />
-											<Button variant="outline" size="sm" onClick={() => onDownload(file)}>
+											<Button variant="outline" size="sm" className="border-slate-300" onClick={() => onDownload(file)}>
 												<Download className="mr-1 size-4" />
 												Download
 											</Button>
@@ -133,7 +133,7 @@ function FileList({ files = [], mode = 'files', isLoading = false }) {
 										</div>
 									) : (
 										<div className="flex justify-end gap-2">
-											<Button variant="outline" size="sm" onClick={() => onRestore(file)}>
+											<Button variant="outline" size="sm" className="border-slate-300" onClick={() => onRestore(file)}>
 												<RotateCcw className="mr-1 size-4" />
 												Restore
 											</Button>

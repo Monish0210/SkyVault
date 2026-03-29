@@ -15,7 +15,7 @@ function NotFoundPage() {
 				<p className="text-8xl font-bold text-slate-200">404</p>
 				<h1 className="mt-3 text-2xl text-slate-600">Page not found</h1>
 				<div className="mt-6">
-					<Button onClick={() => navigate('/')}>Go Home</Button>
+					<Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => navigate('/')}>Go Home</Button>
 				</div>
 			</section>
 		</main>

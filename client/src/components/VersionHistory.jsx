@@ -48,7 +48,7 @@ function VersionHistory({ fileId }) {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>
-				<Button variant="outline" size="sm" aria-label="View version history">
+				<Button variant="outline" size="sm" className="border-slate-300" aria-label="View version history">
 					<Clock className="mr-1 size-4" />
 					Versions
 				</Button>
@@ -73,7 +73,7 @@ function VersionHistory({ fileId }) {
 					) : null}
 
 					{versions.map((version, index) => (
-						<div key={version._id} className="rounded-lg border border-slate-200 p-3">
+						<div key={version._id} className="rounded-lg border border-slate-200 bg-slate-50/60 p-3">
 							<div className="mb-2 flex items-center justify-between gap-2">
 								<p className="text-sm font-medium">Version {index + 1}</p>
 								{version.isCurrent ? <Badge>Current</Badge> : null}
@@ -85,6 +85,7 @@ function VersionHistory({ fileId }) {
 							<Button
 								size="sm"
 								variant="outline"
+								className="border-slate-300"
 								disabled={restoreMutation.isPending || version.isCurrent}
 								onClick={() => restoreMutation.mutate(version.s3VersionId)}
 							>

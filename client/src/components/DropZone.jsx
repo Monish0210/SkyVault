@@ -58,14 +58,14 @@ function DropZone() {
 	}
 
 	const stateClassName = isDragging
-		? 'border-blue-500 bg-blue-50'
-		: 'border-slate-300 bg-white'
+		? 'border-blue-500 bg-blue-50 shadow-sm'
+		: 'border-slate-300 bg-white hover:border-blue-300'
 
 	return (
 		<section
 			role="button"
 			tabIndex={0}
-			className={`rounded-xl border-2 border-dashed p-8 text-center transition-colors ${stateClassName}`}
+			className={`rounded-xl border-2 border-dashed p-8 text-center transition-all ${stateClassName}`}
 			onDragOver={(event) => {
 				event.preventDefault()
 				setIsDragging(true)
@@ -91,8 +91,11 @@ function DropZone() {
 
 			{!isUploading ? (
 				<div className="mx-auto flex max-w-sm flex-col items-center gap-3">
-					<UploadCloud className="size-10 text-slate-500" aria-hidden="true" />
-					<p className="text-sm font-medium text-slate-700">Drop files here or click to browse</p>
+					<div className="rounded-full bg-blue-100 p-3">
+						<UploadCloud className="size-8 text-blue-600" aria-hidden="true" />
+					</div>
+					<p className="text-sm font-semibold text-slate-800">Drop files here or click to browse</p>
+					<p className="text-xs text-slate-500">Uploads are encrypted and linked to your account</p>
 				</div>
 			) : (
 				<div className="mx-auto max-w-sm space-y-3">

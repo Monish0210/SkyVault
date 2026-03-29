@@ -126,10 +126,55 @@
     }
   html {
     @apply font-sans;
+    font-size: clamp(16px, 0.35vw + 15px, 18px);
     }
 }
 
 @layer components {
+  .blue-bubble-field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background: linear-gradient(145deg, oklch(0.97 0.03 250), oklch(0.99 0.01 250) 45%, oklch(0.95 0.04 250));
+  }
+
+  .blue-bubble-glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(28px);
+    opacity: 0.65;
+    background: radial-gradient(circle at center, oklch(0.86 0.1 250), transparent 72%);
+  }
+
+  .blue-bubble-glow-top {
+    top: -14rem;
+    right: -10rem;
+    width: 34rem;
+    height: 34rem;
+  }
+
+  .blue-bubble-glow-bottom {
+    left: -14rem;
+    bottom: -16rem;
+    width: 40rem;
+    height: 40rem;
+  }
+
+  .blue-bubble {
+    position: absolute;
+    left: var(--bubble-left);
+    bottom: -10%;
+    width: var(--bubble-size);
+    height: var(--bubble-size);
+    border-radius: 9999px;
+    opacity: var(--bubble-opacity);
+    background: radial-gradient(circle at 30% 30%, oklch(0.96 0.03 252), oklch(0.68 0.2 252));
+    box-shadow: 0 0 0 1px oklch(0.79 0.11 252 / 45%), 0 8px 30px oklch(0.65 0.18 252 / 40%);
+    animation: bubble-rise var(--bubble-duration) linear infinite;
+    animation-delay: var(--bubble-delay);
+  }
+
   .storage-progress-safe [data-slot='progress-indicator'] {
     @apply bg-green-500;
   }
@@ -140,5 +185,19 @@
 
   .storage-progress-danger [data-slot='progress-indicator'] {
     @apply bg-red-500;
+  }
+}
+
+@keyframes bubble-rise {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(18px, -52vh, 0) scale(1.07);
+  }
+
+  100% {
+    transform: translate3d(-14px, -106vh, 0) scale(0.92);
   }
 }

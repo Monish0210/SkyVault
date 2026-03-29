@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { Loader2, X } from 'lucide-react'
+import { Cloud, Loader2, X } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert.jsx'
 import { Progress } from '../components/ui/progress.jsx'
@@ -65,21 +65,29 @@ function DashboardPage() {
 	return (
 		<main className="min-h-screen bg-slate-50 text-slate-900">
 			<Toaster richColors position="top-right" />
-			<header className="border-b bg-white">
-				<div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-					<div className="text-2xl font-extrabold tracking-tight">SkyVault</div>
+			<header className="sticky top-0 z-10 border-b bg-white/90 backdrop-blur">
+				<div className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5">
+					<div className="flex items-center gap-3">
+						<div className="rounded-md bg-blue-600 p-2 text-white">
+							<Cloud className="size-5" aria-hidden="true" />
+						</div>
+						<div>
+							<p className="text-xl font-semibold tracking-tight">SkyVault</p>
+							<p className="text-sm text-slate-500">Your secure file workspace</p>
+						</div>
+					</div>
 					<div className="flex items-center gap-4">
-						<span className="hidden text-sm text-slate-600 sm:inline">{user?.email || storageInfo?.email}</span>
-						<Button variant="outline" onClick={handleLogout}>
+						<span className="hidden text-base text-slate-600 sm:inline">{user?.email || storageInfo?.email}</span>
+						<Button variant="outline" className="border-slate-300 text-base" onClick={handleLogout}>
 							Logout
 						</Button>
 					</div>
 				</div>
 			</header>
 
-			<div className="mx-auto w-full max-w-6xl px-4 py-6">
-				<section className="mb-6 rounded-xl border bg-white p-4">
-					<div className="mb-2 flex items-center justify-between text-sm text-slate-600">
+			<div className="mx-auto w-full max-w-7xl px-5 py-8">
+				<section className="mb-6 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+					<div className="mb-2 flex items-center justify-between text-base text-slate-600">
 						<span>Storage used</span>
 						<span>
 							{storageLoading ? 'Loading...' : `${storageUsed.toLocaleString()} / ${storageLimit.toLocaleString()} bytes (${storagePercent}%)`}
@@ -112,7 +120,7 @@ function DashboardPage() {
 				) : null}
 
 				<Tabs defaultValue="files" className="w-full">
-					<TabsList>
+					<TabsList className="border border-slate-200 bg-white">
 						<TabsTrigger value="files">My Files</TabsTrigger>
 						<TabsTrigger value="trash">Trash</TabsTrigger>
 					</TabsList>
