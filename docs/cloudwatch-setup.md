@@ -1,6 +1,14 @@
-# CloudWatch Setup (Post-Phase 6)
+# CloudWatch Setup
 
 This guide configures log shipping for SkyVault backend logs after Kubernetes deployment on EC2.
+
+Run these commands on the EC2 terminal unless explicitly marked as local.
+
+## Step 0: SSH into EC2 (run on your local machine)
+
+```bash
+ssh -i "$HOME/Downloads/labsuser.pem" -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP>
+```
 
 ## Step 1: Install CloudWatch agent
 

@@ -16,7 +16,7 @@
 4. Open app at `http://<EC2_PUBLIC_IP>:30081`.
 5. If AWS credentials rotated, update `server/.env` and re-copy to EC2 as `/home/ec2-user/skyvault.env`.
 
-## Section 3: First-Time Setup (Phases 0-6)
+## Section 3: First-Time Setup
 
 1. Clone repository and install dependencies in `server/` and `client/`.
 2. Configure `server/.env` with MongoDB, JWT, and AWS sandbox credentials.
