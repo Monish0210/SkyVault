@@ -128,3 +128,17 @@
     @apply font-sans;
     }
 }
+
+@layer components {
+  .storage-progress-safe [data-slot='progress-indicator'] {
+    @apply bg-green-500;
+  }
+
+  .storage-progress-warning [data-slot='progress-indicator'] {
+    @apply bg-amber-500;
+  }
+
+  .storage-progress-danger [data-slot='progress-indicator'] {
+    @apply bg-red-500;
+  }
+}

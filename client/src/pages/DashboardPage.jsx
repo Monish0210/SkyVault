@@ -1,7 +1,7 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { X } from 'lucide-react'
+import { Loader2, X } from 'lucide-react'
 import { Button } from '../components/ui/button.jsx'
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert.jsx'
 import { Progress } from '../components/ui/progress.jsx'
@@ -25,23 +25,41 @@ function DashboardPage() {
 	const { data: files = [], isLoading: filesLoading } = useFilesList()
 	const { data: trash = [], isLoading: trashLoading } = useTrashList()
 	const { data: storageInfo, isLoading: storageLoading } = useStorageInfo()
+	const [isFirstLoad, setIsFirstLoad] = React.useState(true)
+
+	React.useEffect(() => {
+		if (!filesLoading && !trashLoading && !storageLoading) {
+			setIsFirstLoad(false)
+		}
+	}, [filesLoading, trashLoading, storageLoading])
 
 	const storagePercent = storageInfo?.storagePercent ?? 0
 	const storageUsed = storageInfo?.storageUsed ?? 0
 	const storageLimit = storageInfo?.storageLimit ?? 2147483648
 
-	let progressIndicatorClass = '[&_[data-slot=progress-indicator]]:bg-green-500'
+	let progressIndicatorClass = 'storage-progress-safe'
 	if (storagePercent >= 70 && storagePercent <= 90) {
-		progressIndicatorClass = '[&_[data-slot=progress-indicator]]:bg-amber-500'
+		progressIndicatorClass = 'storage-progress-warning'
 	}
 	if (storagePercent > 90) {
-		progressIndicatorClass = '[&_[data-slot=progress-indicator]]:bg-red-500'
+		progressIndicatorClass = 'storage-progress-danger'
 	}
 
 	const handleLogout = () => {
 		logout()
 		queryClient.clear()
 		navigate('/login')
+	}
+
+	if (isFirstLoad && (filesLoading || trashLoading || storageLoading)) {
+		return (
+			<main className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-700">
+				<div className="flex flex-col items-center gap-3" role="status" aria-live="polite">
+					<Loader2 className="h-8 w-8 animate-spin" />
+					<p className="text-sm font-medium">Loading your files...</p>
+				</div>
+			</main>
+		)
 	}
 
 	return (
