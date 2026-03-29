@@ -1,2 +1,16 @@
-# placeholder — implemented in Phase X
+apiVersion: v1
+kind: Service
+metadata:
+  name: skyvault-backend
+  namespace: skyvault
+spec:
+  # NodePort exposes API directly on EC2 public IP for sandbox simplicity.
+  type: NodePort
+  selector:
+    app: skyvault-backend
+  ports:
+    - port: 5000
+      targetPort: 5000
+      # Fixed NodePort required by project deployment docs.
+      nodePort: 30080
 

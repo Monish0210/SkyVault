@@ -1,2 +1,35 @@
-# placeholder — implemented in Phase X
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skyvault-frontend
+  namespace: skyvault
+spec:
+  # Single replica to fit t2.micro limits.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skyvault-frontend
+  template:
+    metadata:
+      labels:
+        app: skyvault-frontend
+    spec:
+      containers:
+        - name: skyvault-frontend
+          # Image imported into K3s containerd locally.
+          image: skyvault-frontend:latest
+          # CRITICAL: never attempt registry pull.
+          imagePullPolicy: Never
+          ports:
+            # Nginx HTTP port inside container.
+            - containerPort: 80
+          resources:
+            requests:
+              # Keep frontend scheduling footprint very low.
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              # Hard cap for memory-safe operation on 1GB node.
+              cpu: "150m"
+              memory: "128Mi"
 

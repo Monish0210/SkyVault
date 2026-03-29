@@ -1,2 +1,54 @@
-# placeholder — implemented in Phase X
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skyvault-backend
+  namespace: skyvault
+spec:
+  # t2.micro memory is limited; keep a single pod.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: skyvault-backend
+  template:
+    metadata:
+      labels:
+        app: skyvault-backend
+    spec:
+      containers:
+        - name: skyvault-backend
+          # Image is loaded locally into K3s containerd via SCP tar import.
+          image: skyvault-backend:latest
+          # CRITICAL: never pull from registry in sandbox flow.
+          imagePullPolicy: Never
+          ports:
+            # Express API container port.
+            - containerPort: 5000
+          envFrom:
+            # Inject all backend env variables from Kubernetes secret.
+            - secretRef:
+                name: skyvault-secrets
+          resources:
+            requests:
+              # Guaranteed baseline for scheduler placement.
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              # Hard cap to avoid exhausting tiny node memory.
+              cpu: "300m"
+              memory: "256Mi"
+          livenessProbe:
+            # Restarts container if health endpoint is not responsive.
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            # Routes traffic only after backend is ready.
+            httpGet:
+              path: /api/health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
 

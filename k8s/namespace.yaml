@@ -1,2 +1,6 @@
-# placeholder — implemented in Phase X
+# Namespace isolates all SkyVault resources in the cluster.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: skyvault
 
