@@ -3,14 +3,16 @@ require('dotenv/config');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const morgan = require('morgan');
 const mongoose = require('mongoose');
+const logger = require('./utils/logger');
+const requestLogger = require('./middleware/requestLogger');
 const authRoutes = require('./routes/auth');
 const fileRoutes = require('./routes/files');
 const userRoutes = require('./routes/users');
 
 const app = express();
 
+app.use(requestLogger);
 app.use(helmet());
 app.use(
 	cors({
@@ -18,7 +20,6 @@ app.use(
 		credentials: true,
 	})
 );
-app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -39,15 +40,15 @@ const port = process.env.PORT || 5000;
 async function startServer() {
 	try {
 		await mongoose.connect(process.env.MONGODB_URI);
-		console.log('MongoDB connected successfully');
+		logger.info('MongoDB connected successfully');
 
 		if (require.main === module) {
 			app.listen(port, () => {
-				console.log(`Server listening on port ${port}`);
+				logger.info(`Server listening on port ${port}`);
 			});
 		}
 	} catch (error) {
-		console.error('MongoDB connection failed:', error);
+		logger.error({ message: 'MongoDB connection failed', error });
 		process.exit(1);
 	}
 }
