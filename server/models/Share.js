@@ -15,6 +15,10 @@ const shareSchema = new mongoose.Schema({
 		type: String,
 		required: true,
 	},
+	versionId: {
+		type: String,
+		default: null,
+	},
 	expiresAt: {
 		type: Date,
 		required: true,

@@ -1,5 +1,6 @@
 const express = require('express');
 const multer = require('multer');
+const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 const authMiddleware = require('../middleware/auth');
 const storageQuotaMiddleware = require('../middleware/storageQuota');
@@ -146,6 +147,8 @@ router.post('/:id/restore-version', authMiddleware, storageQuotaMiddleware, asyn
 
 router.post('/:id/share', authMiddleware, async (req, res) => {
 	try {
+		const { versionId = null } = req.body || {};
+
 		const file = await File.findOne({
 			_id: req.params.id,
 			userId: req.user.userId,
@@ -157,13 +160,14 @@ router.post('/:id/share', authMiddleware, async (req, res) => {
 		}
 
 		const expiresInSeconds = 3600;
-		const shareUrl = await getPresignedUrl(file.s3Key, expiresInSeconds);
+		const shareUrl = await getPresignedUrl(file.s3Key, expiresInSeconds, versionId);
 		const expiresAt = new Date(Date.now() + 3600000);
 
 		await Share.create({
 			fileId: file._id,
 			createdBy: req.user.userId,
 			presignedUrl: shareUrl,
+			versionId,
 			expiresAt,
 		});
 
@@ -201,10 +205,23 @@ router.get('/:id/shares', authMiddleware, async (req, res) => {
 
 router.get('/', authMiddleware, async (req, res) => {
 	try {
-		const files = await File.find({
-			userId: req.user.userId,
-			isDeleted: false,
-		}).sort({ createdAt: -1 });
+		const files = await File.aggregate([
+			{
+				$match: {
+					userId: new mongoose.Types.ObjectId(req.user.userId),
+					isDeleted: false,
+				},
+			},
+			{ $sort: { createdAt: -1 } },
+			{
+				$group: {
+					_id: '$originalName',
+					latest: { $first: '$$ROOT' },
+				},
+			},
+			{ $replaceRoot: { newRoot: '$latest' } },
+			{ $sort: { createdAt: -1 } },
+		]);
 
 		res.status(200).json(files);
 	} catch (error) {
@@ -227,6 +244,8 @@ router.get('/trash', authMiddleware, async (req, res) => {
 
 router.get('/:id/download', authMiddleware, async (req, res) => {
 	try {
+		const { versionId = null } = req.query;
+
 		const file = await File.findOne({
 			_id: req.params.id,
 			userId: req.user.userId,
@@ -238,7 +257,7 @@ router.get('/:id/download', authMiddleware, async (req, res) => {
 		}
 
 		const expirySeconds = 3600;
-		const url = await getPresignedUrl(file.s3Key, expirySeconds);
+		const url = await getPresignedUrl(file.s3Key, expirySeconds, versionId);
 
 		res.status(200).json({
 			url,

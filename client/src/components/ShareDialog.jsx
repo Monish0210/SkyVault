@@ -16,10 +16,10 @@ import { Input } from './ui/input.jsx'
 
 /**
  * Generates and displays a one-hour expiring share URL.
- * @param {{ fileId: string }} props
+ * @param {{ fileId: string, versionId?: string | null, sharingLabel?: string }} props
  * @returns {import('react').JSX.Element}
  */
-function ShareDialog({ fileId }) {
+function ShareDialog({ fileId, versionId = null, sharingLabel = 'Latest version' }) {
 	const [isOpen, setIsOpen] = React.useState(false)
 	const [isLoading, setIsLoading] = React.useState(false)
 	const [shareUrl, setShareUrl] = React.useState('')
@@ -35,7 +35,8 @@ function ShareDialog({ fileId }) {
 			setIsLoading(true)
 
 			try {
-				const response = await api.post(`/files/${fileId}/share`)
+				const payload = versionId ? { versionId } : {}
+				const response = await api.post(`/files/${fileId}/share`, payload)
 				if (active) {
 					setShareUrl(response.data.shareUrl || '')
 				}
@@ -53,7 +54,7 @@ function ShareDialog({ fileId }) {
 		return () => {
 			active = false
 		}
-	}, [isOpen, fileId])
+	}, [isOpen, fileId, versionId])
 
 	const onCopyLink = async () => {
 		if (!shareUrl) {
@@ -82,6 +83,8 @@ function ShareDialog({ fileId }) {
 					<DialogTitle className="text-slate-900">Share File</DialogTitle>
 					<DialogDescription>Generate a secure temporary link for this file.</DialogDescription>
 				</DialogHeader>
+
+				<p className="text-sm text-slate-600">Sharing: {sharingLabel}</p>
 
 				<Alert className="border-blue-200 bg-blue-50 text-blue-900">
 					<AlertTitle>Note</AlertTitle>

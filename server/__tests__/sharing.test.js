@@ -86,7 +86,7 @@ describe('Sharing routes', () => {
 		expect(response.status).toBe(201);
 		expect(response.body.shareUrl).toBe('https://example.com/shared-download-url');
 		expect(new Date(response.body.expiresAt).getTime()).toBeGreaterThan(Date.now());
-		expect(getPresignedUrl).toHaveBeenCalledWith(file.s3Key, 3600);
+		expect(getPresignedUrl).toHaveBeenCalledWith(file.s3Key, 3600, null);
 
 		const savedShares = await Share.find({ fileId: file._id });
 		expect(savedShares).toHaveLength(1);

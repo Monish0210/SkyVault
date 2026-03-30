@@ -12,6 +12,7 @@ jest.mock('../services/s3Service', () => ({
 const { deleteFromS3, getPresignedUrl } = require('../services/s3Service');
 const User = require('../models/User');
 const File = require('../models/File');
+const Share = require('../models/Share');
 
 let mongoServer;
 let app;
@@ -71,6 +72,7 @@ beforeAll(async () => {
 
 afterEach(async () => {
 	jest.clearAllMocks();
+	await Share.deleteMany({});
 	await File.deleteMany({});
 	await User.deleteMany({});
 });
@@ -81,23 +83,29 @@ afterAll(async () => {
 });
 
 describe('File management routes', () => {
-	it('GET /api/files returns non-deleted files sorted by createdAt desc', async () => {
+	it('GET /api/files returns only latest non-deleted version per filename', async () => {
 		const user = await createUser('list@example.com');
 		const token = signToken(user);
 
 		await createFile(user._id, {
-			originalName: 'old.txt',
+			originalName: 'report.pdf',
 			createdAt: new Date('2024-01-01T00:00:00.000Z'),
 			isDeleted: false,
 		});
 		await createFile(user._id, {
-			originalName: 'new.txt',
+			originalName: 'report.pdf',
+			createdAt: new Date('2024-03-01T00:00:00.000Z'),
+			isDeleted: false,
+		});
+		await createFile(user._id, {
+			originalName: 'notes.txt',
 			createdAt: new Date('2024-02-01T00:00:00.000Z'),
 			isDeleted: false,
 		});
 		await createFile(user._id, {
-			originalName: 'trash.txt',
+			originalName: 'report.pdf',
 			isDeleted: true,
+			createdAt: new Date('2024-04-01T00:00:00.000Z'),
 			deletedAt: new Date(),
 		});
 
@@ -107,8 +115,9 @@ describe('File management routes', () => {
 
 		expect(response.status).toBe(200);
 		expect(response.body).toHaveLength(2);
-		expect(response.body[0].originalName).toBe('new.txt');
-		expect(response.body[1].originalName).toBe('old.txt');
+		expect(response.body[0].originalName).toBe('report.pdf');
+		expect(response.body[0].createdAt).toBe('2024-03-01T00:00:00.000Z');
+		expect(response.body[1].originalName).toBe('notes.txt');
 	});
 
 	it('GET /api/files/trash returns only deleted files', async () => {
@@ -149,7 +158,67 @@ describe('File management routes', () => {
 			filename: 'download.txt',
 			expiresIn: 3600,
 		});
-		expect(getPresignedUrl).toHaveBeenCalledWith('uploads/download-key.txt', 3600);
+		expect(getPresignedUrl).toHaveBeenCalledWith('uploads/download-key.txt', 3600, null);
+	});
+
+	it('GET /api/files/:id/download with versionId uses version-aware presigned URL', async () => {
+		const user = await createUser('download-version@example.com');
+		const token = signToken(user);
+		const file = await createFile(user._id, {
+			originalName: 'download-version.txt',
+			s3Key: 'uploads/download-version-key.txt',
+			s3VersionId: 'version-123',
+		});
+
+		const response = await request(app)
+			.get(`/api/files/${file._id}/download`)
+			.query({ versionId: 'version-123' })
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(response.status).toBe(200);
+		expect(getPresignedUrl).toHaveBeenCalledWith('uploads/download-version-key.txt', 3600, 'version-123');
+	});
+
+	it('POST /api/files/:id/share with versionId stores versionId in Share', async () => {
+		const user = await createUser('share-version@example.com');
+		const token = signToken(user);
+		const file = await createFile(user._id, {
+			originalName: 'share-version.txt',
+			s3Key: 'uploads/share-version-key.txt',
+			s3VersionId: 'version-456',
+		});
+
+		const response = await request(app)
+			.post(`/api/files/${file._id}/share`)
+			.send({ versionId: 'version-456' })
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(response.status).toBe(201);
+		expect(getPresignedUrl).toHaveBeenCalledWith('uploads/share-version-key.txt', 3600, 'version-456');
+
+		const savedShare = await Share.findOne({ fileId: file._id });
+		expect(savedShare).not.toBeNull();
+		expect(savedShare.versionId).toBe('version-456');
+	});
+
+	it('POST /api/files/:id/share without versionId stores null versionId', async () => {
+		const user = await createUser('share-latest@example.com');
+		const token = signToken(user);
+		const file = await createFile(user._id, {
+			originalName: 'share-latest.txt',
+			s3Key: 'uploads/share-latest-key.txt',
+		});
+
+		const response = await request(app)
+			.post(`/api/files/${file._id}/share`)
+			.set('Authorization', `Bearer ${token}`);
+
+		expect(response.status).toBe(201);
+		expect(getPresignedUrl).toHaveBeenCalledWith('uploads/share-latest-key.txt', 3600, null);
+
+		const savedShare = await Share.findOne({ fileId: file._id });
+		expect(savedShare).not.toBeNull();
+		expect(savedShare.versionId).toBeNull();
 	});
 
 	it('DELETE /api/files/:id soft deletes file and decrements storage', async () => {

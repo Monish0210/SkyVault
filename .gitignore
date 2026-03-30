@@ -9,6 +9,7 @@ coverage/
 *.pem
 *.csv
 skyvault-backend.tar
+skyvault-frontend.tar
 *.log
 .vscode/
 .idea/

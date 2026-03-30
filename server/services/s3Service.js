@@ -47,12 +47,14 @@ async function deleteFromS3(s3Key) {
  * Creates a presigned download URL for an S3 object.
  * @param {string} s3Key
  * @param {number} expirySeconds
+ * @param {string | null} [versionId=null]
  * @returns {Promise<string>}
  */
-async function getPresignedUrl(s3Key, expirySeconds) {
+async function getPresignedUrl(s3Key, expirySeconds, versionId = null) {
 	const command = new GetObjectCommand({
 		Bucket: process.env.S3_BUCKET_NAME,
 		Key: s3Key,
+		...(versionId && { VersionId: versionId }),
 	});
 
 	return getSignedUrl(s3Client, command, { expiresIn: expirySeconds });
